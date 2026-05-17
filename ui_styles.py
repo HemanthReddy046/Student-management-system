@@ -10,53 +10,70 @@ LOGIN_PAGE_CSS = """
     [data-testid="stSidebar"] { display: none; }
 
     section.main > div {
-        padding: 1.5rem 1rem 2rem;
+        padding: 2rem 1.25rem 2.5rem;
         min-height: 100vh;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
     }
 
+    section.main .block-container {
+        max-width: 440px !important;
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+    }
+
+    .login-shell {
+        width: 100%;
+        max-width: 420px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
     .login-hero-title {
-        font-size: clamp(2rem, 5vw, 3.25rem);
+        font-size: clamp(1.85rem, 4.5vw, 2.35rem);
         font-weight: 800;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.025em;
         color: #f8fafc;
-        line-height: 1.15;
-        margin: 0 0 0.75rem;
+        line-height: 1.2;
+        margin: 0 0 0.5rem;
         text-align: center;
+        width: 100%;
     }
     .login-hero-sub {
-        font-size: 1.05rem;
+        font-size: 1rem;
         color: #94a3b8;
         text-align: center;
-        margin: 0;
-        line-height: 1.5;
-        max-width: 28rem;
-        margin-left: auto;
-        margin-right: auto;
+        margin: 0 0 1.75rem;
+        line-height: 1.55;
+        max-width: 22rem;
+        padding: 0 0.5rem;
     }
 
     .login-card-title {
-        font-size: 1.55rem;
+        font-size: 1.5rem;
         font-weight: 700;
         letter-spacing: -0.01em;
         color: #f8fafc;
         text-align: center;
-        margin: 0 0 0.35rem;
+        margin: 0 0 0.3rem;
     }
     .login-card-sub {
-        font-size: 0.92rem;
+        font-size: 0.9rem;
         color: #94a3b8;
         text-align: center;
-        margin: 0 0 1.35rem;
+        margin: 0 0 1.25rem;
     }
 
     div[data-testid="stForm"] { border: none; padding: 0; }
     .stTextInput label, .stTextInput p {
         color: #cbd5e1 !important;
         font-weight: 500;
-        font-size: 0.9rem;
+        font-size: 0.88rem;
     }
     .stTextInput input {
         border-radius: 10px !important;
@@ -66,22 +83,15 @@ LOGIN_PAGE_CSS = """
         padding: 0.65rem 0.85rem !important;
     }
 
-    div[data-testid="column"] {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-
     div[data-testid="stVerticalBlock"] > div[data-testid="element-container"] > div[data-testid="stContainer"] {
-        background: linear-gradient(160deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%);
-        border: 1px solid rgba(148, 163, 184, 0.22);
-        border-radius: 20px;
-        padding: 2rem 1.75rem 1.85rem;
+        background: linear-gradient(165deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.99) 100%);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        border-radius: 22px;
+        padding: 2rem 1.85rem 1.9rem;
         box-shadow:
-            0 4px 6px rgba(0, 0, 0, 0.12),
-            0 24px 48px rgba(0, 0, 0, 0.35),
-            inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            0 2px 4px rgba(0, 0, 0, 0.08),
+            0 20px 40px rgba(0, 0, 0, 0.32),
+            0 0 0 1px rgba(255, 255, 255, 0.04) inset;
         width: 100%;
         max-width: 400px;
         margin: 0 auto;
@@ -102,8 +112,9 @@ LOGIN_PAGE_CSS = """
     }
 
     @media (max-width: 768px) {
-        section.main > div { padding-top: 2rem; }
-        .login-hero-title { font-size: 1.85rem; }
+        section.main > div { padding: 1.5rem 1rem 2rem; }
+        .login-hero-title { font-size: 1.65rem; }
+        .login-hero-sub { font-size: 0.95rem; margin-bottom: 1.35rem; }
     }
 </style>
 """

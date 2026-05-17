@@ -241,39 +241,37 @@ def try_render_qr_mobile_view() -> bool:
 
 
 def render_login() -> None:
-    """Clean minimal login screen. Auth logic unchanged."""
+    """Centered premium login screen. Auth logic unchanged."""
     st.markdown(LOGIN_PAGE_CSS, unsafe_allow_html=True)
 
-    left, right = st.columns([1.15, 1], gap="large")
+    st.markdown(
+        '<div class="login-shell">'
+        '<p class="login-hero-title">🎓 Student Management System</p>'
+        '<p class="login-hero-sub">Manage students, analytics, and exports in one place.</p>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
 
-    with left:
+    with st.container(border=True):
         st.markdown(
-            '<p class="login-hero-title">🎓 Student Management System</p>'
-            '<p class="login-hero-sub">Manage students, analytics, and exports in one place.</p>',
+            '<p class="login-card-title">🔐 Login Access</p>'
+            '<p class="login-card-sub">Sign in to continue to your dashboard</p>',
             unsafe_allow_html=True,
         )
-
-    with right:
-        with st.container(border=True):
-            st.markdown(
-                '<p class="login-card-title">🔐 Login Access</p>'
-                '<p class="login-card-sub">Sign in to continue to your dashboard</p>',
-                unsafe_allow_html=True,
+        with st.form("login_form", enter_to_submit=False):
+            username = st.text_input("👤 Username", placeholder="Enter username")
+            password = st.text_input("🔒 Password", type="password", placeholder="Enter password")
+            submitted = st.form_submit_button(
+                "🚀 Login to Dashboard",
+                use_container_width=True,
+                type="primary",
             )
-            with st.form("login_form", enter_to_submit=False):
-                username = st.text_input("👤 Username", placeholder="Enter username")
-                password = st.text_input("🔒 Password", type="password", placeholder="Enter password")
-                submitted = st.form_submit_button(
-                    "🚀 Login to Dashboard",
-                    use_container_width=True,
-                    type="primary",
-                )
-                if submitted:
-                    if login(username, password):
-                        queue_notification("success", "✅ Login successful")
-                        st.rerun()
-                    else:
-                        st.error("❌ Invalid credentials")
+            if submitted:
+                if login(username, password):
+                    queue_notification("success", "✅ Login successful")
+                    st.rerun()
+                else:
+                    st.error("❌ Invalid credentials")
 
 
 def render_sidebar() -> str:

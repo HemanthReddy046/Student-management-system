@@ -4,22 +4,68 @@ Per-student PDF report generation.
 Flow:
   1. View Records list renders a Download PDF button per row (Streamlit download_button).
   2. On click, Streamlit calls generate_student_pdf(student) — no session_state writes.
-  3. ReportLab builds an in-memory PDF (title, detail table, optional QR, footer).
+  3. ReportLab builds an in-memory PDF (title, detail lines, optional QR).
   4. Bytes are returned to st.download_button as file_name student_<id>.pdf.
 """
 
 import io
+import platform
+from pathlib import Path
 from typing import Any
 
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Image as RLImage
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from qr_utils import generate_student_qr
+
+_DETAIL_FONT = "Helvetica"
+_DETAIL_FONT_REGISTERED = False
+
+
+def _register_detail_font() -> str:
+    """Prefer a system font with broader Unicode/emoji coverage when available."""
+    global _DETAIL_FONT, _DETAIL_FONT_REGISTERED
+    if _DETAIL_FONT_REGISTERED:
+        return _DETAIL_FONT
+
+    candidates: list[tuple[str, Path]] = []
+    if platform.system() == "Windows":
+        win = Path(r"C:\Windows\Fonts")
+        candidates.extend(
+            [
+                ("SegoeUI", win / "segoeui.ttf"),
+                ("SegoeUISymbol", win / "seguisym.ttf"),
+            ]
+        )
+    else:
+        candidates.extend(
+            [
+                ("DejaVuSans", Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")),
+                (
+                    "NotoSans",
+                    Path("/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf"),
+                ),
+            ]
+        )
+
+    for font_name, font_path in candidates:
+        if font_path.is_file():
+            try:
+                pdfmetrics.registerFont(TTFont(font_name, str(font_path)))
+                _DETAIL_FONT = font_name
+                break
+            except Exception:
+                continue
+
+    _DETAIL_FONT_REGISTERED = True
+    return _DETAIL_FONT
 
 
 def student_pdf_filename(student_id: int | str) -> str:
@@ -27,19 +73,39 @@ def student_pdf_filename(student_id: int | str) -> str:
     return f"student_{student_id}.pdf"
 
 
-def _detail_rows(student: dict[str, Any]) -> list[tuple[str, str]]:
+def _escape_xml(text: str) -> str:
+    return (
+        str(text)
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+    )
+
+
+def _detail_line_html(emoji: str, label: str, value: str, *, link: str | None = None) -> str:
+    safe_label = _escape_xml(label)
+    safe_value = _escape_xml(value)
+    if link:
+        safe_value = (
+            f'<a href="{_escape_xml(link)}" color="#1f4e79">{safe_value}</a>'
+        )
+    return f"{emoji} <b>{safe_label}:</b> {safe_value}"
+
+
+def _build_detail_lines(student: dict[str, Any]) -> list[str]:
+    full_name = f"{student['first_name']} {student['last_name']}".strip()
+    email = str(student["mail"])
     return [
-        ("Student ID", str(student["student_id"])),
-        ("First Name", str(student["first_name"])),
-        ("Last Name", str(student["last_name"])),
-        ("Gender", str(student["gender"])),
-        ("Course", str(student["course"])),
-        ("Branch", str(student["branch"])),
-        ("Email", str(student["mail"])),
-        ("Contact", str(student["contact"])),
-        ("State", str(student["state"])),
-        ("Address", str(student["address"])),
-        ("Pincode", str(student["areapincode"])),
+        _detail_line_html("🆔", "Student ID", str(student["student_id"])),
+        _detail_line_html("👤", "Name", full_name),
+        _detail_line_html("⚧", "Gender", str(student["gender"])),
+        _detail_line_html("🎓", "Course", str(student["course"])),
+        _detail_line_html("🏢", "Branch", str(student["branch"])),
+        _detail_line_html("📧", "Email", email, link=f"mailto:{email}"),
+        _detail_line_html("📱", "Contact", str(student["contact"])),
+        _detail_line_html("🌍", "State", str(student["state"])),
+        _detail_line_html("🏠", "Address", str(student["address"])),
+        _detail_line_html("📮", "Pincode", str(student["areapincode"])),
     ]
 
 
@@ -47,8 +113,9 @@ def generate_student_pdf(student: dict[str, Any], *, include_qr: bool = True) ->
     """
     Build a single-student PDF report as bytes (never writes to disk).
 
-    Layout: title → details table → optional embedded QR → footer branding.
+    Layout: title → emoji detail lines → optional embedded QR.
     """
+    detail_font = _register_detail_font()
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
         buf,
@@ -73,7 +140,7 @@ def generate_student_pdf(student: dict[str, Any], *, include_qr: bool = True) ->
         parent=styles["Normal"],
         fontSize=12,
         textColor=colors.HexColor("#5a6a7a"),
-        spaceAfter=16,
+        spaceAfter=18,
         alignment=TA_CENTER,
     )
     section_style = ParagraphStyle(
@@ -81,68 +148,47 @@ def generate_student_pdf(student: dict[str, Any], *, include_qr: bool = True) ->
         parent=styles["Heading2"],
         fontSize=14,
         textColor=colors.HexColor("#1f4e79"),
-        spaceBefore=8,
-        spaceAfter=10,
+        spaceBefore=4,
+        spaceAfter=12,
     )
-    footer_style = ParagraphStyle(
-        "Footer",
+    detail_style = ParagraphStyle(
+        "DetailLine",
         parent=styles["Normal"],
-        fontSize=10,
-        textColor=colors.HexColor("#5a6a7a"),
-        alignment=TA_CENTER,
-        spaceBefore=20,
+        fontName=detail_font,
+        fontSize=11,
+        leading=18,
+        textColor=colors.HexColor("#1e293b"),
+        alignment=TA_LEFT,
+        spaceAfter=2,
     )
 
     full_name = f"{student['first_name']} {student['last_name']}"
     story: list = [
         Paragraph("Student Report", title_style),
-        Paragraph(f"Student: {full_name}", subtitle_style),
+        Paragraph(f"Student: {_escape_xml(full_name)}", subtitle_style),
         Paragraph("Student Details", section_style),
     ]
 
-    # Detail table with emoji labels (glyph rendering depends on PDF viewer/font).
-    emoji_prefix = {
-        "Student ID": "🆔",
-        "First Name": "👤",
-        "Last Name": "👤",
-        "Gender": "🚻",
-        "Course": "📘",
-        "Branch": "💻",
-        "Email": "📧",
-        "Contact": "📱",
-        "State": "🌍",
-        "Address": "🏠",
-        "Pincode": "📮",
-    }
-
-    table_data = [["Field", "Value"]]
-    for label, value in _detail_rows(student):
-        display_label = f"{emoji_prefix.get(label, '')} {label}".strip()
-        table_data.append([display_label, value])
-
-    detail_table = Table(table_data, colWidths=[2.2 * inch, 4.0 * inch])
-    detail_table.setStyle(
+    detail_rows = [
+        [Paragraph(line, detail_style)] for line in _build_detail_lines(student)
+    ]
+    details_table = Table(detail_rows, colWidths=[6.2 * inch])
+    details_table.setStyle(
         TableStyle(
             [
-                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1f4e79")),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                ("FONTSIZE", (0, 0), (-1, -1), 10),
-                ("BOTTOMPADDING", (0, 0), (-1, 0), 10),
-                ("TOPPADDING", (0, 0), (-1, 0), 10),
-                ("BACKGROUND", (0, 1), (-1, -1), colors.HexColor("#f8fafc")),
-                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f0f4f8")]),
-                ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#d0d7de")),
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8fafc")),
+                ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#e2e8f0")),
+                ("TOPPADDING", (0, 0), (-1, -1), 12),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
+                ("LEFTPADDING", (0, 0), (-1, -1), 16),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 16),
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("LEFTPADDING", (0, 0), (-1, -1), 8),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
             ]
         )
     )
-    story.append(detail_table)
-    story.append(Spacer(1, 0.25 * inch))
+    story.append(details_table)
+    story.append(Spacer(1, 0.3 * inch))
 
-    # Bonus: embed scannable QR for this student (same payload as View QR).
     if include_qr:
         qr_png, _ = generate_student_qr(student)
         if qr_png:
@@ -150,15 +196,6 @@ def generate_student_pdf(student: dict[str, Any], *, include_qr: bool = True) ->
             qr_image = RLImage(io.BytesIO(qr_png), width=1.45 * inch, height=1.45 * inch)
             qr_image.hAlign = "CENTER"
             story.append(qr_image)
-            story.append(Spacer(1, 0.15 * inch))
-
-    story.append(Paragraph("Generated by Smart Student Management System", footer_style))
-    story.append(
-        Paragraph(
-            '<font color="#1f4e79"><b>Smart Student Management System</b></font>',
-            footer_style,
-        )
-    )
 
     doc.build(story)
     buf.seek(0)
