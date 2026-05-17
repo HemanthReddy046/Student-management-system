@@ -245,24 +245,22 @@ def render_login() -> None:
     st.markdown(LOGIN_PAGE_CSS, unsafe_allow_html=True)
 
     st.markdown(
-        '<div class="login-shell">'
         '<p class="login-hero-title">🎓 Student Management System</p>'
-        '<p class="login-hero-sub">Manage students, analytics, and exports in one place.</p>'
-        '</div>',
+        '<p class="login-hero-sub">Manage students, analytics, and exports in one place.</p>',
         unsafe_allow_html=True,
     )
 
     with st.container(border=True):
         st.markdown(
-            '<p class="login-card-title">🔐 Login Access</p>'
+            '<p class="login-card-title">Login Access</p>'
             '<p class="login-card-sub">Sign in to continue to your dashboard</p>',
             unsafe_allow_html=True,
         )
         with st.form("login_form", enter_to_submit=False):
-            username = st.text_input("👤 Username", placeholder="Enter username")
-            password = st.text_input("🔒 Password", type="password", placeholder="Enter password")
+            username = st.text_input("Username", placeholder="Enter username")
+            password = st.text_input("Password", type="password", placeholder="Enter password")
             submitted = st.form_submit_button(
-                "🚀 Login to Dashboard",
+                "Login to Dashboard",
                 use_container_width=True,
                 type="primary",
             )

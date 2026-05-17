@@ -2,119 +2,156 @@
 
 LOGIN_PAGE_CSS = """
 <style>
+    /* ---- Login page only (injected in render_login) ---- */
     [data-testid="stAppViewContainer"] {
-        background: linear-gradient(145deg, #0b1220 0%, #162032 42%, #1a2744 100%);
+        background:
+            radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99, 102, 241, 0.18) 0%, transparent 55%),
+            linear-gradient(160deg, #0a0f1a 0%, #111827 40%, #0f172a 100%);
         min-height: 100vh;
     }
-    [data-testid="stHeader"] { background: transparent; }
+    [data-testid="stHeader"] { background: transparent !important; }
     [data-testid="stSidebar"] { display: none; }
+    footer, [data-testid="stToolbar"] { visibility: hidden; height: 0; }
+
+    [data-testid="stMainBlockContainer"],
+    section.main .block-container {
+        max-width: 460px !important;
+        width: 100% !important;
+        margin: 0 auto !important;
+        padding: 3rem 1.5rem 2.5rem !important;
+    }
 
     section.main > div {
-        padding: 2rem 1.25rem 2.5rem;
-        min-height: 100vh;
+        min-height: calc(100vh - 4rem);
         display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
     }
 
-    section.main .block-container {
-        max-width: 440px !important;
-        padding-top: 2rem !important;
-        padding-bottom: 2rem !important;
-    }
-
-    .login-shell {
-        width: 100%;
-        max-width: 420px;
-        margin: 0 auto;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
     .login-hero-title {
-        font-size: clamp(1.85rem, 4.5vw, 2.35rem);
-        font-weight: 800;
-        letter-spacing: -0.025em;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        font-size: 1.95rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
         color: #f8fafc;
-        line-height: 1.2;
+        line-height: 1.3;
         margin: 0 0 0.5rem;
         text-align: center;
-        width: 100%;
     }
     .login-hero-sub {
         font-size: 1rem;
         color: #94a3b8;
         text-align: center;
-        margin: 0 0 1.75rem;
-        line-height: 1.55;
-        max-width: 22rem;
+        margin: 0 0 2rem;
+        line-height: 1.6;
         padding: 0 0.5rem;
     }
 
     .login-card-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-        color: #f8fafc;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #f1f5f9;
         text-align: center;
-        margin: 0 0 0.3rem;
+        margin: 0 0 0.35rem;
     }
     .login-card-sub {
         font-size: 0.9rem;
         color: #94a3b8;
         text-align: center;
-        margin: 0 0 1.25rem;
+        margin: 0 0 1.5rem;
     }
 
-    div[data-testid="stForm"] { border: none; padding: 0; }
-    .stTextInput label, .stTextInput p {
-        color: #cbd5e1 !important;
-        font-weight: 500;
-        font-size: 0.88rem;
+    /* Login card */
+    [data-testid="stMainBlockContainer"] [data-testid="stVerticalBlockBorderWrapper"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        background: rgba(30, 41, 59, 0.65) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(148, 163, 184, 0.2) !important;
+        border-radius: 20px !important;
+        box-shadow:
+            0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+            0 8px 32px rgba(0, 0, 0, 0.35),
+            0 24px 48px rgba(0, 0, 0, 0.2) !important;
+        overflow: hidden;
     }
-    .stTextInput input {
+
+    [data-testid="stMainBlockContainer"] [data-testid="stVerticalBlockBorderWrapper"] > div {
+        padding: 2rem 2rem 1.75rem !important;
+    }
+
+    [data-testid="stMainBlockContainer"] div[data-testid="stForm"] {
+        border: none !important;
+        padding: 0 !important;
+    }
+
+    [data-testid="stMainBlockContainer"] .stTextInput {
+        margin-bottom: 0.5rem;
+    }
+
+    [data-testid="stMainBlockContainer"] .stTextInput label,
+    [data-testid="stMainBlockContainer"] .stTextInput p {
+        color: #e2e8f0 !important;
+        font-weight: 500 !important;
+        font-size: 0.9rem !important;
+        margin-bottom: 0.35rem !important;
+    }
+
+    [data-testid="stMainBlockContainer"] .stTextInput input {
+        width: 100% !important;
+        box-sizing: border-box !important;
         border-radius: 10px !important;
         border: 1px solid #475569 !important;
         background: #0f172a !important;
-        color: #f1f5f9 !important;
-        padding: 0.65rem 0.85rem !important;
+        color: #f8fafc !important;
+        padding: 0.7rem 0.9rem !important;
+        font-size: 0.95rem !important;
+        min-height: 2.75rem !important;
+        line-height: 1.4 !important;
     }
 
-    div[data-testid="stVerticalBlock"] > div[data-testid="element-container"] > div[data-testid="stContainer"] {
-        background: linear-gradient(165deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.99) 100%);
-        border: 1px solid rgba(148, 163, 184, 0.25);
-        border-radius: 22px;
-        padding: 2rem 1.85rem 1.9rem;
-        box-shadow:
-            0 2px 4px rgba(0, 0, 0, 0.08),
-            0 20px 40px rgba(0, 0, 0, 0.32),
-            0 0 0 1px rgba(255, 255, 255, 0.04) inset;
-        width: 100%;
-        max-width: 400px;
-        margin: 0 auto;
+    [data-testid="stMainBlockContainer"] .stTextInput input:focus {
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
+        outline: none !important;
     }
 
-    .stButton > button, .stFormSubmitButton > button {
+    [data-testid="stMainBlockContainer"] .stFormSubmitButton {
+        margin-top: 1rem !important;
+        width: 100% !important;
+    }
+
+    [data-testid="stMainBlockContainer"] .stFormSubmitButton > button {
+        width: 100% !important;
         background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
         border: none !important;
         border-radius: 10px !important;
-        color: white !important;
+        color: #fff !important;
         font-weight: 600 !important;
-        padding: 0.7rem 1.25rem !important;
+        font-size: 1rem !important;
+        padding: 0.72rem 1.25rem !important;
+        min-height: 2.85rem !important;
+        letter-spacing: 0.01em;
         transition: transform 0.15s ease, box-shadow 0.15s ease !important;
     }
-    .stButton > button:hover, .stFormSubmitButton > button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 10px 28px rgba(99, 102, 241, 0.35) !important;
+
+    [data-testid="stMainBlockContainer"] .stFormSubmitButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(99, 102, 241, 0.4) !important;
     }
 
-    @media (max-width: 768px) {
-        section.main > div { padding: 1.5rem 1rem 2rem; }
-        .login-hero-title { font-size: 1.65rem; }
-        .login-hero-sub { font-size: 0.95rem; margin-bottom: 1.35rem; }
+    @media (max-width: 520px) {
+        [data-testid="stMainBlockContainer"],
+        section.main .block-container {
+            max-width: 100% !important;
+            padding: 2rem 1rem 1.5rem !important;
+        }
+        [data-testid="stMainBlockContainer"] [data-testid="stVerticalBlockBorderWrapper"] > div {
+            padding: 1.5rem 1.25rem 1.35rem !important;
+        }
+        .login-hero-title { font-size: 1.6rem; }
     }
 </style>
 """

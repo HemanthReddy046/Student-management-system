@@ -156,10 +156,11 @@ def generate_student_pdf(student: dict[str, Any], *, include_qr: bool = True) ->
         parent=styles["Normal"],
         fontName=detail_font,
         fontSize=11,
-        leading=18,
+        leading=20,
         textColor=colors.HexColor("#1e293b"),
         alignment=TA_LEFT,
-        spaceAfter=2,
+        spaceAfter=4,
+        spaceBefore=2,
     )
 
     full_name = f"{student['first_name']} {student['last_name']}"
@@ -172,16 +173,19 @@ def generate_student_pdf(student: dict[str, Any], *, include_qr: bool = True) ->
     detail_rows = [
         [Paragraph(line, detail_style)] for line in _build_detail_lines(student)
     ]
-    details_table = Table(detail_rows, colWidths=[6.2 * inch])
+    details_table = Table(detail_rows, colWidths=[5.4 * inch])
+    details_table.hAlign = "CENTER"
     details_table.setStyle(
         TableStyle(
             [
                 ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8fafc")),
-                ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#e2e8f0")),
-                ("TOPPADDING", (0, 0), (-1, -1), 12),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
-                ("LEFTPADDING", (0, 0), (-1, -1), 16),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 16),
+                ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#e2e8f0")),
+                ("TOPPADDING", (0, 0), (-1, 0), 14),
+                ("BOTTOMPADDING", (0, -1), (-1, -1), 14),
+                ("TOPPADDING", (0, 1), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 1), (-1, -1), 5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 18),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 18),
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
             ]
         )
